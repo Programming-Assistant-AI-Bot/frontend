@@ -6,7 +6,6 @@ import ChatMessages from '@/components/ChatMessages';
 import ChatInput from '@/components/ChatInput';
 
 function Chatbot() {
-  const [sessionId, setSessionId] = useState('');
   const [sessionInput, setSessionInput] = useState('');
   const [activeSession, setActiveSession] = useState(''); 
   const [messages, setMessages] = useImmer([]);
@@ -26,8 +25,10 @@ function Chatbot() {
       // Handle the array response directly (backend returns an array, not an object with messages property)
       if (Array.isArray(history) && history.length > 0) {
         setMessages(history);
+        console.log(history)
       } else if (history && history.messages && history.messages.length > 0) {
         // Keep the original object.messages handling as fallback
+       
         setMessages(history.messages);
       }
       
@@ -45,7 +46,7 @@ function Chatbot() {
 
     setMessages(draft => [...draft,
       { role: 'user', content: trimmedMessage },
-      { role: 'assistant', content: '', sources: [], loading: true }
+      { role: 'assistant', content: '', loading: true }
     ]);
     setNewMessage('');
 
