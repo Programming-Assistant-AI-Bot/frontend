@@ -9,15 +9,8 @@ function ChatMessages({ messages, isLoading }) {
   
   return (
     <div ref={scrollContentRef} className='grow space-y-4'>
-      {messages.map(({ role, content, loading, error }, idx) => (
-        <div key={idx} className={`flex items-start gap-4 py-4 px-3 rounded-xl ${role === 'user' ? 'bg-primary-blue/10 text-left' : ''}`}>
-          {role === 'user' && (
-            <img
-              className='h-[26px] w-[26px] shrink-0'
-              src={userIcon}
-              alt='user'
-            />
-          )}
+      {messages.map(({ role, content, loading = false , error = null }, idx) => (
+        <div key={idx} className={`flex items-start gap-4 py-4 px-3 rounded-xl text-white ${role === 'user' ? 'bg-message-purple/10 text-left' : ''}`}>
           <div>
             <div className='markdown-container'>
               {(loading && !content) ? <Spinner />

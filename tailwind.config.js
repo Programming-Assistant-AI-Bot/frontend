@@ -22,6 +22,8 @@ export default {
           'primary-orange': 'rgb(243, 195, 177)',
           'main-text': 'rgb(0, 43, 49)',
           'error-red': 'rgb(208, 69, 82)',
+          'chatbot-bg': '#25003E',
+          'message-purple': 'rgb(162, 132, 206)',
         },
         animation: {
           'spinner': 'spinner 1.5s linear infinite',
