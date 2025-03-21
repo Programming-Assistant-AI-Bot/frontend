@@ -1,8 +1,8 @@
 import Markdown from 'react-markdown';
 import useAutoScroll from '@/hooks/useAutoScroll';
-import Spinner from '@/components/Spinner';
-import userIcon from '@/assets/images/user.svg';
+import Spinner from '@/components/chatBot/Spinner';
 import errorIcon from '@/assets/images/error.svg';
+import styles from '@/components/chatBot/ChatMessages.module.css';
 
 function ChatMessages({ messages, isLoading }) {
   const scrollContentRef = useAutoScroll(isLoading);
@@ -12,7 +12,7 @@ function ChatMessages({ messages, isLoading }) {
       {messages.map(({ role, content, loading = false , error = null }, idx) => (
         <div key={idx} className={`flex items-start gap-4 py-4 px-3 rounded-xl text-white ${role === 'user' ? 'bg-message-purple/10 text-left' : ''}`}>
           <div>
-            <div className='markdown-container'>
+            <div className={styles.markdownContainer}>
               {(loading && !content) ? <Spinner />
                 : (role === 'assistant')
                   ? <Markdown>{content}</Markdown>

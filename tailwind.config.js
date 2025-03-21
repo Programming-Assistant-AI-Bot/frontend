@@ -20,7 +20,7 @@ export default {
         colors: {
           'primary-blue': 'rgb(146, 179, 202)',
           'primary-orange': 'rgb(243, 195, 177)',
-          'main-text': 'rgb(0, 43, 49)',
+          'main-text': 'rgb(18, 18, 18)',
           'error-red': 'rgb(208, 69, 82)',
           'chatbot-bg': '#25003E',
           'message-purple': 'rgb(162, 132, 206)',
