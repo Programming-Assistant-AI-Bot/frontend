@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useImmer } from 'use-immer';
 import api from '@/api';
 import { parseSSEStream } from '@/utils';
-import ChatMessages from '@/components/ChatMessages';
-import ChatInput from '@/components/ChatInput';
+import ChatMessages from '@/components/chatBot/ChatMessages';
+import ChatInput from '@/components/chatBot/ChatInput';
 
 function Chatbot() {
   const [sessionInput, setSessionInput] = useState('');
@@ -71,6 +71,12 @@ function Chatbot() {
   }
 
   return (
+  <div className='flex flex-col min-h-full w-full mx-auto px-4 bg-chatbot-bg p-8 text-center'>
+    <header className='sticky top-0 shrink-0 z-20 bg-chatbot-bg'>
+      <div className='flex flex-col h-full w-full gap-1 pt-4 pb-2'>
+        <h1 className='font-urbanist text-[2.0rem] font-semibold text-white'>Archelon AI</h1>
+      </div>
+    </header>
     <div className='relative grow flex flex-col gap-6 pt-6'>
       {/* Session ID input field */}
       {!activeSession && (
@@ -134,6 +140,7 @@ function Chatbot() {
         submitNewMessage={submitNewMessage}
       />
     </div>
+  </div>
   );
 }
 

@@ -1,0 +1,36 @@
+.spinnerChild {
+    @apply absolute -top-1 left-0 h-full w-full content-[''] rounded-full bg-primary-orange opacity-0;
+  }
+
+.markdownContainer p {
+    @apply mb-5 text-left;
+  }
+  
+  .markdownContainer h1,
+  .markdownContainer h2,
+  .markdownContainer h3,
+  .markdownContainer h4,
+  .markdownContainer h5,
+  .markdownContainer h6 {
+    @apply font-bold mb-5 text-left;
+  }
+  
+  .markdownContainer li {
+    @apply mb-3 text-left;
+  }
+  
+  .markdownContainer li:last-child {
+    @apply mb-0;
+  }
+  
+  .markdownContainer ol {
+    @apply list-decimal mx-0 mt-0 mb-5 pl-8 text-left;
+  }
+  
+  .markdownContainer ul {
+    @apply list-disc mx-0 mt-0 mb-5 pl-8 text-left;
+  }
+  
+  .markdownContainer > :last-child {
+    @apply mb-0;
+  }
