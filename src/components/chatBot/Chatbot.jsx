@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useImmer } from 'use-immer';
 import api from '@/api';
-import { parseSSEStream } from '@/utils';
+import { parseSSEStream,processMarkdown,trackCodeBlockState } from '@/utils';
 import ChatMessages from '@/components/chatBot/ChatMessages';
 import ChatInput from '@/components/chatBot/ChatInput';
 
@@ -43,26 +43,43 @@ function Chatbot() {
   async function submitNewMessage() {
     const trimmedMessage = newMessage.trim();
     if (!trimmedMessage || isLoading || isLoadingHistory) return;
-
+  
     setMessages(draft => [...draft,
       { role: 'user', content: trimmedMessage },
       { role: 'assistant', content: '', loading: true }
     ]);
     setNewMessage('');
-
+  
     try {
       const stream = await api.sendChatMessage(activeSession, trimmedMessage);
-      for await (const textChunk of parseSSEStream(stream)) {
-        console.log("Received chunk:", textChunk); // Add logging here
+      let rawAccumulatedResponse = '';
+      let codeBlockState = { inBlock: false, lang: '' };
+      
+      for await (const chunk of parseSSEStream(stream)) {
+        // Process chunk and track code block state
+        rawAccumulatedResponse += chunk;
+        codeBlockState = trackCodeBlockState(chunk, codeBlockState);
+        
+        // Process the accumulated response
+        const processedResponse = processMarkdown(rawAccumulatedResponse);
+        
+        // Update UI with processed content
         setMessages(draft => {
-          draft[draft.length - 1].content += textChunk;
+          draft[draft.length - 1].content = processedResponse;
         });
       }
+      
+      
+      // Final processing after stream completes
       setMessages(draft => {
+        // Ensure final message has proper formatting
+        draft[draft.length - 1].content = processMarkdown(rawAccumulatedResponse);
         draft[draft.length - 1].loading = false;
+        console.log(draft[draft.length-1].content);
       });
+      
     } catch (err) {
-      console.log(err);
+      console.error("Error during chat:", err);
       setMessages(draft => {
         draft[draft.length - 1].loading = false;
         draft[draft.length - 1].error = true;

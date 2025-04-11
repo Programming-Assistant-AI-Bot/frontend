@@ -17,24 +17,24 @@ function SignUpAdditionalInfo() {
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="text-sm font-semibold">Address</label>
-                    <input type="text" id="firstName" className={styles.formInput} placeholder="No" required/>
+                    <input type="text" id="No" className={styles.formInput} placeholder="No" required/>
                 </div>
                 <div class='pt-6'>
-                    <input type="text" id="lastName" className={styles.formInput} placeholder="Street" required/>
+                    <input type="text" id="Street" className={styles.formInput} placeholder="Street" required/>
                 </div>
             </div>
 
             <div class="mt-2">
-                <input type="email" id="text" className={styles.formInput} placeholder="City" required/>
+                <input type="text" id="City" className={styles.formInput} placeholder="City" required/>
             </div>
 
             <div class="mt-2">
-                <input type="password" id="text" className={styles.formInput} placeholder="Country" required/>
+                <input type="text" id="Country" className={styles.formInput} placeholder="Country" required/>
             </div>
 
             <div class="mt-6">
                 <label class="text-sm font-semibold">DOB</label>
-                <input type="date" id="text" className={styles.formInput} placeholder="DOB" required />
+                <input type="date" id="DOB" className={styles.formInput} placeholder="DOB" required />
             </div>
 
            

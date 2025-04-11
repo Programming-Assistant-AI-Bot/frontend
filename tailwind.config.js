@@ -15,6 +15,7 @@ export default {
       fontFamily: {
         'sans': ['Open Sans', 'sans-serif'],
         'urbanist': ['Urbanist', 'sans-serif'],
+        'mono': ['Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
       },
       extend: {
         colors: {

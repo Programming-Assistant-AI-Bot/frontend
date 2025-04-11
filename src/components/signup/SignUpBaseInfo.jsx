@@ -2,8 +2,16 @@ import React from 'react'
 import bgImage from '@/assets/images/bgImage.png'
 import logo from '@/assets/images/logo.png'
 import styles from '@/components/signup/SignUp.module.css'
+import { useNavigate } from 'react-router-dom'
 
 function SignUpBaseInfo() {
+  const navigate = useNavigate()
+
+  const handleSubmit = (e)=>{
+    e.preventDefault()
+    navigate('/signup2')
+  }
+  
   return (
     <div className={styles.pageContainer}>
       <div className='absolute bottom-0 left-0 right-0 h-[45%] bg-cover' style={{backgroundImage: `url(${bgImage})`}}/>
@@ -13,7 +21,7 @@ function SignUpBaseInfo() {
         </div>
         <div className='h-[80%] w-full'>
           <h1 className="text-3xl font-bold text-center m-9">Sign Up</h1>
-          <form id="signupForm">
+          <form id="signupForm" onSubmit={handleSubmit}>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="text-sm font-semibold">First Name</label>
