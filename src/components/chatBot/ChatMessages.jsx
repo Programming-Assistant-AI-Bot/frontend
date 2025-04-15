@@ -5,6 +5,7 @@ import useAutoScroll from '@/hooks/useAutoScroll';
 import Spinner from '@/components/chatBot/Spinner';
 import errorIcon from '@/assets/images/error.svg';
 import styles from '@/components/chatBot/ChatMessages.module.css';
+import logo3 from '@/assets/images/logo3.png'
 
 // Improved regex that better handles language identifiers
 // Original regex for complete code blocks
@@ -170,8 +171,13 @@ function ChatMessages({ messages, isLoading }) {
         const { processedContent, codeBlocks } = parseMessageContent(content);
         
         return (
-          <div key={idx} className={`flex items-start gap-4 py-4 px-3 rounded-xl text-white ${role === 'user' ? 'bg-message-purple/10 text-left' : ''}`}>
+          <div className='flex'>
+              {(role==='assistant') && 
+                <img src={logo3} alt='logo' className='h-12 w-12 object-contain self-start sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-14 lg:w-14  '/>
+              }
+          <div key={idx} className={`flex items-start gap-4 py-4 px-3 rounded-xl text-white ${role === 'user' ? 'bg-[#965ECD] text-left w-[50%] ml-[48%]' : 'w-[80%] bg-message-purple/10'}`}>
             <div className="w-full">
+
               <div className={styles.markdownContainer}>
                 {(loading && !content) ? <Spinner /> : (
                   <>
@@ -208,6 +214,7 @@ function ChatMessages({ messages, isLoading }) {
                 </div>
               )}
             </div>
+          </div>
           </div>
         );
       })}
