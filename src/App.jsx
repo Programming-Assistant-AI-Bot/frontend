@@ -4,6 +4,7 @@ import SignUpBaseInfo from '@/components/signUp/SignUpBaseInfo';
 import { Route,Routes } from 'react-router-dom';
 import SignUpAdditionalInfo from './components/signup/SignUpAdditionalInfo';
 import Homepage from './ComponentsTharundi/Homepage';
+import { Toaster } from "sonner";
 
 function App() {
 
@@ -19,6 +20,7 @@ function App() {
         <Route path='/signup' element={<SignUpBaseInfo/>}/>
         <Route path='/signup2' element={<SignUpAdditionalInfo/>}/>
       </Routes>
+      <Toaster position="top-center" richColors />
     </>
   )
 }
