@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useImmer } from 'use-immer';
 import api from '@/api';
-import { parseSSEStream } from '@/utils';
+import { parseSSEStream,processMarkdown,trackCodeBlockState } from '@/utils';
 import ChatMessages from '@/components/chatBot/ChatMessages';
 import ChatInput from '@/components/chatBot/ChatInput';
+import logo2 from '@/assets/images/logo2.png'
 
 function Chatbot() {
   const [sessionInput, setSessionInput] = useState('');
@@ -43,26 +44,43 @@ function Chatbot() {
   async function submitNewMessage() {
     const trimmedMessage = newMessage.trim();
     if (!trimmedMessage || isLoading || isLoadingHistory) return;
-
+  
     setMessages(draft => [...draft,
       { role: 'user', content: trimmedMessage },
       { role: 'assistant', content: '', loading: true }
     ]);
     setNewMessage('');
-
+  
     try {
       const stream = await api.sendChatMessage(activeSession, trimmedMessage);
-      for await (const textChunk of parseSSEStream(stream)) {
-        console.log("Received chunk:", textChunk); // Add logging here
+      let rawAccumulatedResponse = '';
+      let codeBlockState = { inBlock: false, lang: '' };
+      
+      for await (const chunk of parseSSEStream(stream)) {
+        // Process chunk and track code block state
+        rawAccumulatedResponse += chunk;
+        codeBlockState = trackCodeBlockState(chunk, codeBlockState);
+        
+        // Process the accumulated response
+        const processedResponse = processMarkdown(rawAccumulatedResponse);
+        
+        // Update UI with processed content
         setMessages(draft => {
-          draft[draft.length - 1].content += textChunk;
+          draft[draft.length - 1].content = processedResponse;
         });
       }
+      
+      
+      // Final processing after stream completes
       setMessages(draft => {
+        // Ensure final message has proper formatting
+        draft[draft.length - 1].content = processMarkdown(rawAccumulatedResponse);
         draft[draft.length - 1].loading = false;
+        console.log(draft[draft.length-1].content);
       });
+      
     } catch (err) {
-      console.log(err);
+      console.error("Error during chat:", err);
       setMessages(draft => {
         draft[draft.length - 1].loading = false;
         draft[draft.length - 1].error = true;
@@ -71,13 +89,11 @@ function Chatbot() {
   }
 
   return (
-  <div className='flex flex-col min-h-full w-full mx-auto px-4 bg-chatbot-bg p-8 text-center'>
-    <header className='sticky top-0 shrink-0 z-20 bg-chatbot-bg'>
-      <div className='flex flex-col h-full w-full gap-1 pt-4 pb-2'>
-        <h1 className='font-urbanist text-[2.0rem] font-semibold text-white'>Archelon AI</h1>
-      </div>
+  <div className='flex flex-col min-h-full w-full bg-chatbot-bg p-4 '>
+    <header className='fixed top-0 right-0 left-0 z-20 bg-chatbot-bg w-full h-[15vh]'>
+        <img src={logo2} alt="logo" className='w-1/3 ml-[60%] h-full object-contain'/>
     </header>
-    <div className='relative grow flex flex-col gap-6 pt-6'>
+    <div className='relative grow flex flex-col gap-6 pt-[15vh]'>
       {/* Session ID input field */}
       {!activeSession && (
         <div className="mb-4">
@@ -117,7 +133,7 @@ function Chatbot() {
       )}
 
       {messages.length === 0 && !isLoadingHistory && (
-        <div className='mt-3 font-urbanist text-primary-blue text-xl font-light space-y-2'>
+        <div className='mt-3 font-urbanist text-primary-blue text-xl font-light space-y-2 text-center'>
           <p>👋 Welcome!</p>
           <p>Ask me anything about the coding related tasks.</p>
         </div>
