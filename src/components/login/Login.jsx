@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import "./Login.css";
+import styles from '@/components/signup/SignUp.module.css'; // Reusing the signup styles
+import bgImage from '@/assets/images/bgImage.png';
+import logo from '@/assets/images/logo.png';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
@@ -38,53 +40,45 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <div className="logo">
-          <h1>Archelon AI</h1>
-          <p>The Wise Coding Companion</p>
+    <div className={styles.pageContainer}>
+      <div className='absolute bottom-0 left-0 right-0 h-[45%] bg-cover' style={{ backgroundImage: `url(${bgImage})` }} />
+      <div className={styles.mainContainer}>
+        <div className='h-[20%] w-full flex justify-center items-center'>
+          <img src={logo} alt="logo" className='w-full max-h-full object-fill' />
         </div>
+        <div className='h-[70%] w-full'>
+          <h1 className="text-3xl font-bold text-center m-9">Login</h1>
+          <form onSubmit={handleLogin}>
+            <div className="mt-6">
+              <label className="text-sm font-semibold">Email</label>
+              <input 
+                type="email" 
+                className={styles.formInput} 
+                placeholder="Email" 
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-        <h2>Login</h2>
+            <div className="mt-6">
+              <label className="text-sm font-semibold">Password</label>
+              <input 
+                type="password" 
+                className={styles.formInput} 
+                placeholder="Password" 
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
 
-        <form onSubmit={handleLogin}>
-          <label>Email</label>
-          <input
-            type="email"
-            placeholder="Email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          <label>Password</label>
-          <input
-            type="password"
-            placeholder="Password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <button type="submit">Log in</button>
-        </form>
-
-        <p
-          className="register-link cursor-pointer text-blue-600 hover:underline"
-          onClick={() => navigate("/signup")}
-        >
-          Create a new account
-        </p>
-      </div>
-
-      <div className="background-wave">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
-          <path
-            fill="#4c1d95"
-            fillOpacity="1"
-            d="M0,160L34.3,149.3C68.6,139,137,117..."
-          ></path>
-        </svg>
+            <button type="submit" className={styles.submitButton}>
+              Log in
+            </button>
+          </form>
+          <div className={styles.loginLink} onClick={() => navigate("/signup")}>Create a new account</div>
+        </div>
       </div>
     </div>
   );
