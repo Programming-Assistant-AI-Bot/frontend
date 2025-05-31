@@ -135,7 +135,7 @@ function Chatbot() {
       {messages.length === 0 && !isLoadingHistory && (
         <div className='mt-3 font-urbanist text-primary-blue text-xl font-light space-y-2 text-center'>
           <p>👋 Welcome!</p>
-          <p>Ask me anything about the coding related tasks.</p>
+          <p>Ask me anything about the perl coding related tasks.</p>
         </div>
       )}
 
