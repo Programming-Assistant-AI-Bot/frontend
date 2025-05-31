@@ -1,0 +1,121 @@
+/* Full-page center alignment */
+
+body{
+  margin: 0;
+  
+}
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f5f5f5;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background wave: covers full width */
+.background-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+}
+
+.background-wave svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Login Box Styling */
+.login-box {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+  width: 350px;
+  text-align: center;
+  position: relative;
+  z-index: 10; /* Keeps it above the wave */
+}
+
+/* Logo Section */
+.logo {
+  background: #4c1d95;
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.logo h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.logo p {
+  font-size: 12px;
+  margin: 0;
+}
+
+/* Login Form */
+h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label {
+  text-align: left;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  outline: none;
+}
+
+input:focus {
+  border-color: #4c1d95;
+}
+
+/* Login Button */
+button {
+  background: #4c1d95;
+  color: white;
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #3a137a;
+}
+
+/* Register Link */
+.register-link {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.register-link a {
+  color: #4c1d95;
+  text-decoration: none;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}
