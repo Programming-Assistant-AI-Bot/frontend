@@ -40,7 +40,7 @@ function parseMessageContent(content) {
   if (isOpeningCodeBlock(processedContent)) {
     const segments = processedContent.split("```");
     // Get everything before the last segment (text content)
-    const textContent = segments.slice(0, -2).join("```");
+    const textContent = segments.slice(0, -1).join("```");
     // Get potential language identifier and code content
     const potentialCode = segments[segments.length - 1];
     
