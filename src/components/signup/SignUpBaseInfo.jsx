@@ -36,6 +36,7 @@ function SignUpBaseInfo() {
         <div className='h-[80%] w-full'>
           <h1 className="text-3xl font-bold text-center m-9">Sign Up</h1>
           <form id="signupForm" onSubmit={handleSubmit}>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-semibold">First Name</label>
@@ -45,6 +46,7 @@ function SignUpBaseInfo() {
                 <label className="text-sm font-semibold">Last Name</label>
                 <input type="text" id="lastName" className={styles.formInput} placeholder="Last Name" required />
               </div>
+
             </div>
 
             <div className="mt-6">
