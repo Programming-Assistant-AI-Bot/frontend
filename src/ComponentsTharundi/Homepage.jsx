@@ -1,21 +1,18 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import React, { useState } from "react";
 import SideBar from "./SideBar";
 import ChatWindow from "./Chatwindow";
 
-
 function Homepage() {
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
+
   return (
     <div className="flex w-full h-screen">
-      {/* Sidebar - Takes 1/4th of the width */}
       <div className="w-1/5 h-full">
-        <SideBar />
+        <SideBar onSessionSelect={setSelectedSessionId} />
       </div>
 
-      {/* Chat Window - Takes the rest */}
       <div className="w-4/5 h-full">
-        <ChatWindow />
+        <ChatWindow sessionId={selectedSessionId} />
       </div>
     </div>
   );
