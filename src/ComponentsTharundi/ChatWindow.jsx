@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import ChatMessage from "./ChatMessage.jsx";
 import ChatInput from "./ChatInput.jsx";
 import ChatbotName from "./ChatbotName.jsx";
@@ -33,6 +33,7 @@ const ChatWindow = ({ sessionId }) => {
           }));
           
           setMessages(transformedMessages);
+          console.log("Fetched Messages:", transformedMessages);
         } catch (error) {
           toast.error("Failed to load chat history");
           console.error("Error fetching messages:", error);
@@ -124,8 +125,7 @@ const ChatWindow = ({ sessionId }) => {
     setInputText("");
   };
 
-
-   const handleAttachType = (type) => {
+  const handleAttachType = (type) => {
     switch (type) {
       case "repository":
         setShowRepositoryPopup(true);
@@ -141,24 +141,6 @@ const ChatWindow = ({ sessionId }) => {
     }
   };
 
-  // const handleFileUpload = (file) => {
-  //   if (file) {
-  //     if (file.size > 25 * 1024 * 1024) {
-  //       alert("File size exceeds 25MB limit");
-  //       return;
-  //     }
-  //     setMessages([...messages, {
-  //       sender: "user",
-  //       text: `[PDF Attachment] ${file.name}`,
-  //       attachment: {
-  //         type: "pdf",
-  //         name: file.name,
-  //         size: file.size
-  //       }
-  //     }]);
-  //   }
-  // };
-
   const handleFileUpload = (file) => {
     if (file) {
       if (file.size > 25 * 1024 * 1024) {
@@ -166,7 +148,6 @@ const ChatWindow = ({ sessionId }) => {
         return;
       }
       setSelectedFile(file);
-      setInputText(); // Pre-fill input with upload status
     }
   };
 
@@ -200,150 +181,65 @@ const ChatWindow = ({ sessionId }) => {
     setShowUrlPopup(false);
   };
 
-  const handlePdfSubmit = async (docName) => {
-    if (!selectedFile) return;
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    formData.append("doc_name", selectedFile.name);
-
-    try {
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "user",
-          // text: `[PDF Upload] ${selectedFile.name}`,
-          attachment: {
-            type: "pdf",
-            name: selectedFile.name,
-            status: "uploading",
-          },
-        },
-      ]);
-
-      // Axios version
-      const response = await axios.post(
-        "http://localhost:8000/session/addFile",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      // No need for response.ok check with axios - successful responses come here
-      const data = response.data;
-      toast.success("Document uploaded successfully!");
-
-      setMessages((prev) =>
-        prev.map((msg) => {
-          if (msg.attachment?.name === selectedFile.name) {
-            return {
-              ...msg,
-              attachment: {
-                ...msg.attachment,
-                status: "success",
-                link: data.fileLocationLink,
-              },
-            };
-          }
-          return msg;
-        })
-      );
-    } catch (error) {
-      // Handle axios errors
-      const errorMessage = error.response?.data?.detail || error.message;
-      toast.error(`Upload failed: ${errorMessage}`);
-
-      setMessages((prev) =>
-        prev.map((msg) => {
-          if (msg.attachment?.name === selectedFile.name) {
-            return {
-              ...msg,
-              attachment: {
-                ...msg.attachment,
-                status: "error",
-              },
-            };
-          }
-          return msg;
-        })
-      );
-    } finally {
-      setSelectedFile(null);
-      setShowPdfNamePopup(false);
-    }
-  };
-  // ... other functions remain the same ...
-
   return (
     <div className="flex flex-col h-full w-full bg-[#25003E] p-4 relative">
-      {sessionId ? (
-        <div className="h-full flex flex-col pb-20">
-          <ChatbotName />
-          
-          <div className="flex-1 overflow-y-auto space-y-6 py-4 mt-24">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-              </div>
-            ) : messages.length > 0 ? (
-              messages.map((msg, index) => (
-                <ChatMessage key={index} message={msg} />
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                <div className="text-lg mb-2">No messages yet</div>
-                <div className="text-sm">Start a conversation with Archelon</div>
-              </div>
-            )}
-          </div>
+      <div className="h-full flex flex-col pb-20">
+        <ChatbotName />
+        
+        <div className="flex-1 overflow-y-auto space-y-6 py-4 mt-24">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+            </div>
+          ) : messages.length > 0 ? (
+            messages.map((msg, index) => (
+              <ChatMessage key={index} message={msg} />
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <div className="text-lg mb-2">No messages yet</div>
+              <div className="text-sm">Start a conversation with Archelon</div>
+            </div>
+          )}
+        </div>
 
-          <div className="mt-auto">
-            <ChatInput
-              onSend={handleSend}
-              onAttachClick={() => setShowAttachmentPopup(true)}
-              selectedFile={selectedFile}
-              onRemoveFile={() => setSelectedFile(null)}
-              inputText={inputText}
-              setInputText={setInputText}
-            />
-          </div>
-
-          {/* Hidden file input and popups */}
-          <input
-            type="file"
-            id="pdf-upload"
-            accept=".pdf"
-            className="hidden"
-            onChange={(e) => handleFileUpload(e.target.files[0])}
-          />
-
-          <AttachmentPopup
-            isOpen={showAttachmentPopup}
-            onClose={() => setShowAttachmentPopup(false)}
-            onAttachTypeSelect={handleAttachType}
-          />
-
-          <RepositoryPopup
-            isOpen={showRepositoryPopup}
-            onClose={() => setShowRepositoryPopup(false)}
-            onSubmit={handleRepositorySubmit}
-          />
-
-          <WeburlPopup
-            isOpen={showUrlPopup}
-            onClose={() => setShowUrlPopup(false)}
-            onSubmit={handleUrlSubmit}
+        <div className="mt-auto">
+          <ChatInput
+            onSend={handleSend}
+            onAttachClick={() => setShowAttachmentPopup(true)}
+            selectedFile={selectedFile}
+            onRemoveFile={() => setSelectedFile(null)}
+            inputText={inputText}
+            setInputText={setInputText}
           />
         </div>
-      ) : (
-        <div className="text-white flex flex-col justify-center items-center h-full">
-          <div className="text-xl mb-2">👋 Welcome to Archelon AI</div>
-          <div className="text-gray-300">Select a session to start chatting</div>
-        </div>
-      )}
+
+        <input
+          type="file"
+          id="pdf-upload"
+          accept=".pdf"
+          className="hidden"
+          onChange={(e) => handleFileUpload(e.target.files[0])}
+        />
+
+        <AttachmentPopup
+          isOpen={showAttachmentPopup}
+          onClose={() => setShowAttachmentPopup(false)}
+          onAttachTypeSelect={handleAttachType}
+        />
+
+        <RepositoryPopup
+          isOpen={showRepositoryPopup}
+          onClose={() => setShowRepositoryPopup(false)}
+          onSubmit={handleRepositorySubmit}
+        />
+
+        <WeburlPopup
+          isOpen={showUrlPopup}
+          onClose={() => setShowUrlPopup(false)}
+          onSubmit={handleUrlSubmit}
+        />
+      </div>
     </div>
   );
 };

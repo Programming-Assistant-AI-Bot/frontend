@@ -22,7 +22,7 @@ const WeburlPopup = ({ isOpen, onClose, onSubmit }) => {
     setErrorMessage('');
     
     try {
-      
+    
       new URL(url);
     } catch (error) {
       setErrorMessage('Please enter a valid website URL (e.g., https://example.com)');
