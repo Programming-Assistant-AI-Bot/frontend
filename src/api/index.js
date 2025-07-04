@@ -2,8 +2,8 @@
 const API_BASE_URL = "http://localhost:8000";
 
 async function sendChatMessage(sessionId, message) {
-  console.log(`Sending request to ${API_BASE_URL}/${sessionId} with message: ${message}`);
-  const response = await fetch(`${API_BASE_URL}/${sessionId}`, {
+  console.log(`Sending request to ${API_BASE_URL}/chats/${sessionId} with message: ${message}`);
+  const response = await fetch(`${API_BASE_URL}/chats/${sessionId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

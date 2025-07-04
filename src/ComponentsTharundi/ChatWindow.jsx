@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import { parseSSEStream, processMarkdown, trackCodeBlockState } from "@/utils";
 import { useImmer } from "use-immer";
-import api from "@/api";
+import api from "@/api/index.js";
 
 const ChatWindow = ({ sessionId }) => {
   const [messages, setMessages] = useImmer([]);
