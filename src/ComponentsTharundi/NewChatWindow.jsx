@@ -17,7 +17,6 @@ const NewChatWindow = ({ onSessionCreated, onCancel }) => {
     setIsLoading(true);
     try {
       const response = await axios.post("http://localhost:8000/session/createSession", {
-        user_id: userId,
         query: query.trim(),
       });
       toast.success("New session created!");

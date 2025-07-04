@@ -40,7 +40,7 @@ function Homepage() {
         />
       </div>
       <div className="w-4/5 h-full">
-        {isCreatingSession ? (
+        {isCreatingSession || !selectedSessionId ? (
           <NewChatWindow
             onSessionCreated={handleSessionCreated}
             onCancel={handleCancelCreateSession}
