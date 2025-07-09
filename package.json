@@ -21,6 +21,7 @@
     "eventsource-parser": "^3.0.0",
     "lucide-react": "^0.487.0",
     "marked": "^16.0.0",
+    "nanoid": "^5.1.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",

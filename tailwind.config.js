@@ -33,6 +33,13 @@ export default {
     			'message-purple': 'rgb(162, 132, 206)',
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',
+				
+				color1:	'#1e1e1e',
+				color2:	'#252526',
+				color3:	'#2d2d30',
+				color4:	'#3e3e42',
+				color5:	'#007acc',
+				
     			card: {
     				DEFAULT: 'hsl(var(--card))',
     				foreground: 'hsl(var(--card-foreground))'
