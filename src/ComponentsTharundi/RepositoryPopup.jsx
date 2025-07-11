@@ -1,9 +1,12 @@
 
+
+
 // import React, { useState, useEffect } from 'react';
+// import axios from 'axios';
 
 // const RepositoryPopup = ({ isOpen, onClose, onSubmit }) => {
 //   const [repoUrl, setRepoUrl] = useState('');
-//   const [isValid, setIsValid] = useState(true);
+//   const [errorMessage, setErrorMessage] = useState('');
 //   const [isSubmitting, setIsSubmitting] = useState(false);
 
 //   useEffect(() => {
@@ -16,52 +19,42 @@
 //     }
 //   }, [isOpen, onClose]);
 
-//   const validateUrl = (url) => {
-//     const pattern = /^(https?:\/\/)?(www\.)?(github|gitlab)\.com\/.+/i;
-//     return pattern.test(url);
-//   };
-
 //   const handleSubmit = async (e) => {
-//     console.log("PUka")
-//   e.preventDefault();
-//   setErrorMessage('');
-  
-//   // Client-side validation with GitHub-specific regex
-//   const GITHUB_REPO_REGEX = /^https?:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?\/?$/;
-//   const isValidFormat = GITHUB_REPO_REGEX.test(url);
-  
-//   if (!isValidFormat) {
-//     setErrorMessage('Invalid GitHub URL format. Expected: https://github.com/owner/repo');
-//     return;
-//   }
+//     e.preventDefault();
+//     setErrorMessage('');
 
-//   setIsSubmitting(true);
-  
-//   try {
-//     const response = await axios.post('http://localhost:8000/session/validateGithubUrl', { link: url });
-    
-//     if (response.data.valid) {
-//       await onSubmit(url);
-//       onClose();
-//     } else {
-//       // Use the reason from backend response or default message
-//       setErrorMessage(response.data.reason || 'URL validation failed');
-//     }
-//   } catch (error) {
-//     if (error.response) {
-//       // Handle 4xx/5xx responses
-//       setErrorMessage(error.response.data?.reason || 'GitHub validation failed');
-//     } else if (error.request) {
-//       setErrorMessage('Server not responding. Please try again later.');
-//     } else {
-//       setErrorMessage('An unexpected error occurred.');
-//     }
-//   } finally {
-//     setIsSubmitting(false);
-//   }
-// };
+//     // Client-side validation with GitHub-specific regex
+//     const GITHUB_REPO_REGEX = /^https?:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?\/?$/;
+//     const isValidFormat = GITHUB_REPO_REGEX.test(repoUrl);
 
-  
+//     if (!isValidFormat) {
+//       setErrorMessage('Invalid GitHub URL format. Expected: https://github.com/owner/repo');
+//       return;
+//     }
+
+//     setIsSubmitting(true);
+
+//     try {
+//       const response = await axios.post('http://localhost:8000/session/validateGithubUrl', { link: repoUrl });
+      
+//       if (response.data.valid) {
+//         await onSubmit(repoUrl);
+//         onClose();
+//       } else {
+//         setErrorMessage(response.data.reason || 'URL validation failed');
+//       }
+//     } catch (error) {
+//       if (error.response) {
+//         setErrorMessage(error.response.data?.reason || 'GitHub validation failed');
+//       } else if (error.request) {
+//         setErrorMessage('Server not responding. Please try again later.');
+//       } else {
+//         setErrorMessage('An unexpected error occurred.');
+//       }
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
 
 //   if (!isOpen) return null;
 
@@ -88,19 +81,19 @@
 //                 value={repoUrl}
 //                 onChange={(e) => {
 //                   setRepoUrl(e.target.value);
-//                   setIsValid(true);
+//                   setErrorMessage('');
 //                 }}
 //                 placeholder="https://github.com/username/repo"
 //                 className={`w-full px-4 py-2 border ${
-//                   isValid ? 'border-gray-300' : 'border-red-500'
+//                   errorMessage ? 'border-red-500' : 'border-gray-300'
 //                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
 //                 autoFocus
 //                 required
 //               />
               
-//               {!isValid && (
+//               {errorMessage && (
 //                 <p className="text-sm text-red-500">
-//                   Please enter a valid GitHub or GitLab repository URL
+//                   {errorMessage}
 //                 </p>
 //               )}
 
@@ -129,13 +122,20 @@
 //   );
 // };
 
-// export default RepositoryPopup;
+// export default RepositoryPopup;     
+
+
+
+
+
+
+
 
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const RepositoryPopup = ({ isOpen, onClose, onSubmit }) => {
+const RepositoryPopup = ({ isOpen, onClose, onSubmit,sessionId }) => {
   const [repoUrl, setRepoUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -150,15 +150,31 @@ const RepositoryPopup = ({ isOpen, onClose, onSubmit }) => {
     }
   }, [isOpen, onClose]);
 
+  // Reset form when popup opens
+  useEffect(() => {
+    if (isOpen) {
+      setRepoUrl('');
+      setErrorMessage('');
+      setIsSubmitting(false);
+    }
+  }, [isOpen]);
+
+  const validateGitHubUrl = (url) => {
+    const GITHUB_REPO_REGEX = /^https?:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?\/?$/;
+    return GITHUB_REPO_REGEX.test(url);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
-    // Client-side validation with GitHub-specific regex
-    const GITHUB_REPO_REGEX = /^https?:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?\/?$/;
-    const isValidFormat = GITHUB_REPO_REGEX.test(repoUrl);
+    // Client-side validation
+    if (!repoUrl.trim()) {
+      setErrorMessage('Please enter a repository URL');
+      return;
+    }
 
-    if (!isValidFormat) {
+    if (!validateGitHubUrl(repoUrl)) {
       setErrorMessage('Invalid GitHub URL format. Expected: https://github.com/owner/repo');
       return;
     }
@@ -166,21 +182,26 @@ const RepositoryPopup = ({ isOpen, onClose, onSubmit }) => {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/session/validateGithubUrl', { link: repoUrl });
-      
+      const response = await axios.post(
+        'http://localhost:8000/validate/Contents/validateGithubUrl',
+        { link: repoUrl,session_id:sessionId}
+      );
+
       if (response.data.valid) {
         await onSubmit(repoUrl);
-        onClose();
+        onClose(); // Close popup on success
       } else {
-        setErrorMessage(response.data.reason || 'URL validation failed');
+        setErrorMessage(response.data.reason || 'Repository validation failed');
       }
     } catch (error) {
-      if (error.response) {
-        setErrorMessage(error.response.data?.reason || 'GitHub validation failed');
+      console.error('Repository validation error:', error);
+      
+      if (error.response?.data?.reason) {
+        setErrorMessage(error.response.data.reason);
       } else if (error.request) {
         setErrorMessage('Server not responding. Please try again later.');
       } else {
-        setErrorMessage('An unexpected error occurred.');
+        setErrorMessage('An unexpected error occurred. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
@@ -196,6 +217,7 @@ const RepositoryPopup = ({ isOpen, onClose, onSubmit }) => {
       onClick={onClose}
       role="dialog"
       aria-modal="true"
+      aria-labelledby="repository-popup-title"
     >
       <div 
         className="bg-white rounded-lg w-96 shadow-2xl transform transition-all overflow-hidden"
@@ -204,53 +226,78 @@ const RepositoryPopup = ({ isOpen, onClose, onSubmit }) => {
       >
         <form onSubmit={handleSubmit}>
           <div className="p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Add Repository Link</h3>
+            <h3 id="repository-popup-title" className="text-lg font-medium text-gray-900 mb-4">
+              Add Repository Link
+            </h3>
             
             <div className="space-y-4">
-              <input
-                type="url"
-                value={repoUrl}
-                onChange={(e) => {
-                  setRepoUrl(e.target.value);
-                  setErrorMessage('');
-                }}
-                placeholder="https://github.com/username/repo"
-                className={`w-full px-4 py-2 border ${
-                  errorMessage ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                autoFocus
-                required
-              />
+              <div>
+                <label htmlFor="repo-input" className="sr-only">Repository URL</label>
+                <input
+                  id="repo-input"
+                  type="url"
+                  value={repoUrl}
+                  onChange={(e) => {
+                    setRepoUrl(e.target.value);
+                    if (errorMessage) setErrorMessage('');
+                  }}
+                  placeholder="https://github.com/username/repo"
+                  className={`w-full px-4 py-2 border ${
+                    errorMessage ? 'border-red-500' : 'border-gray-300'
+                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  autoFocus
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
               
               {errorMessage && (
-                <p className="text-sm text-red-500">
+                <div className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">
                   {errorMessage}
-                </p>
+                </div>
               )}
 
               <div className="flex justify-end space-x-3 pt-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
                   disabled={isSubmitting}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#6d1785] text-white hover:bg-[#3f144b] rounded-lg transition-colors disabled:opacity-50"
+                  className="px-4 py-2 bg-[#6d1785] text-white hover:bg-[#3f144b] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-purple-500"
                   disabled={isSubmitting || !repoUrl.trim()}
                 >
-                  {isSubmitting ? 'Adding...' : 'Add Repository'}
+                  {isSubmitting ? 'Validating...' : 'Add Repository'}
                 </button>
               </div>
             </div>
           </div>
         </form>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 };
 
-export default RepositoryPopup;     
+export default RepositoryPopup;
