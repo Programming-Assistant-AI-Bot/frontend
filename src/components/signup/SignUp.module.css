@@ -16,7 +16,7 @@
 }
 
 .mainContainer{
-    @apply relative z-10 sm:w-[70%] md:w-[60%] lg:w-[35%] bg-white min-h-[95%] rounded-xl p-[3%] flex shadow-lg flex-col
+    @apply relative z-10 sm:w-[70%] md:w-[60%] lg:w-[35%] bg-white min-h-[90%] rounded-xl p-[3%] flex shadow-lg flex-col
 }
 
 .pageContainer{
