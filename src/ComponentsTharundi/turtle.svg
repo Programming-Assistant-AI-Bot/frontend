@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 24 24" id="Turtle">
+  <g id="Duotone" fill="#000000" class="color000000 svgShape">
+    <path d="M9.5 19.5h14V12l-7-4-7 4zM6.5 16.5h-6l1.5-4h4.5z" fill="#ffffff" class="colorffffff svgShape"></path>
+    <path fill="#e6e6e6" d="M23.5 19.5V12l-7-4v11.5z" class="colorcce7ff svgShape"></path>
+    <path d="M9.5 19.5h14V12l-7-4-7 4zM23.5 14.5l-12.6-3.3M23.5 19l-14-4M9.5 15l12.2-4M9.5 19.5l14-5M6.5 16.5l3 3M6.5 16.5h-6l1.5-4h4.5zM3.5 14.5v.5M11.7 19.5l-1.7 4M20.8 19.5l1.7 4M16.5 8v11.5" fill="none" stroke="#878787" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" class="colorStroke1078ff svgStroke"></path>
+  </g>
+  <path id="Frames-24px" fill="none" d="M0 0h24v24H0z"></path>
+</svg>
