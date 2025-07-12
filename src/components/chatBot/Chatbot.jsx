@@ -4,7 +4,7 @@ import api from '@/api';
 import { parseSSEStream,processMarkdown,trackCodeBlockState } from '@/utils';
 import ChatMessages from '@/components/chatBot/ChatMessages';
 import ChatInput from '@/components/chatBot/ChatInput';
-import logo2 from '@/assets/images/logo2.png'
+import logo2 from '@/assets/images/logo.png'
 
 function Chatbot() {
   const [sessionInput, setSessionInput] = useState('');
