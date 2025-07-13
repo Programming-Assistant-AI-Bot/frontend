@@ -10,6 +10,7 @@ import Login from './components/login/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
+
 function App() {
   return (
     <AuthProvider>
