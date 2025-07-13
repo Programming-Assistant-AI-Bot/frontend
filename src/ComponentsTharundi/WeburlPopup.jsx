@@ -126,7 +126,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosWithAuth from '@/utils/axiosWithAuth';
 
 const WeburlPopup = ({ isOpen, onClose, onSubmit, sessionId }) => {
   const [url, setUrl] = useState('');
@@ -143,44 +143,20 @@ const WeburlPopup = ({ isOpen, onClose, onSubmit, sessionId }) => {
     }
   }, [isOpen, onClose]);
 
-  // Reset form when popup opens
-  useEffect(() => {
-    if (isOpen) {
-      setUrl('');
-      setErrorMessage('');
-      setIsSubmitting(false);
-    }
-  }, [isOpen]);
-
-  const validateUrl = (urlString) => {
-    try {
-      const parsedUrl = new URL(urlString);
-      return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
-    // Client-side validation
     if (!url.trim()) {
-      setErrorMessage('Please enter a valid URL');
-      return;
-    }
-
-    if (!validateUrl(url)) {
-      setErrorMessage('Please enter a valid website URL (e.g., https://example.com)');
+      setErrorMessage('Please enter a website URL');
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      const response = await axios.post(
-        'http://localhost:8000/validate/Contents/validateWebUrl',
+      // Use authenticated axios instance
+      const response = await axiosWithAuth().post(
+        '/validate/Contents/validateWebUrl',
         { link: url, session_id: sessionId }
       );
 
@@ -188,7 +164,7 @@ const WeburlPopup = ({ isOpen, onClose, onSubmit, sessionId }) => {
         await onSubmit(url);
         onClose(); // Close popup on success
       } else {
-        setErrorMessage(response.data.message || 'URL validation failed');
+        setErrorMessage(response.data.reason || 'URL validation failed');
       }
     } catch (error) {
       console.error('URL validation error:', error);

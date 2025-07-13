@@ -3,6 +3,7 @@ import bgImage from '@/assets/images/bgImage.png'
 import logo from '@/assets/images/logo.png'
 import styles from '@/components/signup/SignUp.module.css'
 import { useNavigate } from 'react-router-dom'
+import { toast } from "sonner";
 
 function SignUpAdditionalInfo() {
   const navigate = useNavigate()
@@ -14,7 +15,7 @@ function SignUpAdditionalInfo() {
     const userData = JSON.parse(localStorage.getItem('signup_user_data'))
 
     if (!userData) {
-      alert('Missing signup information. Please start from the beginning.')
+      toast.error("Missing signup information. Please start from the beginning.");
       navigate('/signup')
       return
     }
@@ -49,12 +50,14 @@ function SignUpAdditionalInfo() {
         return res.json()
       })
       .then(() => {
-        alert('Signup successful!')
+
+        toast.success("Signup successful");
+
         navigate('/login')
       })
       .catch((err) => {
         console.error(err)
-        alert('Signup failed. Try again.')
+        toast.error('Signup failed. Try again.')
       })
       navigate('/login')
   }

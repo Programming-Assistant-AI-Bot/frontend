@@ -87,15 +87,16 @@
 
 
 // Updated NewChatWindow.jsx
-import React, { useState } from "react";
-import { Send, Sparkles, X } from "lucide-react";
+import React, { useState, useContext } from "react";
+import { Send, Sparkles } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
+import { AuthContext } from "../contexts/AuthContext";
 
 const NewChatWindow = ({ onSessionCreated, onCancel }) => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const userId = "tharundi_lavanya"; // Replace with actual user ID (e.g., from auth context)
+  const { user } = useContext(AuthContext);
 
   const handleCreateSession = async () => {
     if (!query.trim()) {
@@ -105,9 +106,18 @@ const NewChatWindow = ({ onSessionCreated, onCancel }) => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post("http://localhost:8000/session/createSession", {
-        query: query.trim(),
+      // Create axios instance with auth headers
+      const axiosAuth = axios.create({
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
+      
+      const response = await axiosAuth.post("http://localhost:8000/session/createSession", {
+        query: query.trim(),
+        user_id: user?.id || user?.username  // Use authenticated user ID
+      });
+      
       toast.success("New session created!");
       console.log("New Session Data:", response.data);
       

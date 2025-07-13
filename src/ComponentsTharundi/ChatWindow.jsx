@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import ChatMessages from "./ChatMessage";
 import ChatInput from "./ChatInput.jsx";
 import ChatbotName from "./ChatbotName.jsx";
@@ -12,6 +12,8 @@ import { useImmer } from "use-immer";
 import api from "@/api/index.js";
 import { nanoid } from "nanoid";
 import LoadingAnimation from "./LoadingAnimation";
+import axiosWithAuth, { axiosWithAuthFormData } from "@/utils/axiosWithAuth"; // Import the auth utilities
+import { AuthContext } from "../contexts/AuthContext"; // Import AuthContext
 
 const ChatWindow = ({ sessionId }) => {
   const [messages, setMessages] = useImmer([]);
@@ -22,6 +24,7 @@ const ChatWindow = ({ sessionId }) => {
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const { user } = useContext(AuthContext); // Get authenticated user
 
   // Use ref to track the current streaming message
   const streamingMessageRef = useRef(null);
@@ -57,75 +60,77 @@ const ChatWindow = ({ sessionId }) => {
     fetchMessages();
   }, [sessionId, setMessages]);
 
-  const uploadFile = async (file, userMessage) => {
+  // Simplified uploadFile function
+  const uploadFile = async (file) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("doc_name", file.name);
-      formData.append("session_id", sessionId)
+      formData.append("session_id", sessionId);
 
-      const response = await axios.post(
-        "http://localhost:8000/validate/Contents/addFile",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+      // Show loading toast
+      const loadingToastId = toast.loading(`Uploading ${file.name}...`);
+
+      // Use authenticated axios instance for form data
+      const response = await axiosWithAuthFormData().post(
+        "/validate/Contents/addFile",  
+        formData
       );
 
-      const data = response.data;
-      toast.success("Document uploaded successfully!");
+      // Dismiss loading toast and show success
+      toast.dismiss(loadingToastId);
+      toast.success(`${file.name} uploaded successfully!`);
 
+      // Add a clean message only after successful upload
+      const attachmentMessage = {
+        id: nanoid(),
+        role: "user",
+        content: `[Attachment] ${file.name}`,
+        attachment: {
+          type: "pdf",
+          name: file.name,
+          status: "success",
+        },
+      };
 
+      // Add the message to the chat
+      setMessages(draft => [...draft, attachmentMessage]);
+
+      return true;
     } catch (error) {
       const errorMessage = error.response?.data?.detail || error.message;
       toast.error(`Upload failed: ${errorMessage}`);
-
-      setMessages(draft => {
-        const messageIndex = draft.findIndex(msg => msg.id === userMessage.id);
-        if (messageIndex !== -1) {
-          draft[messageIndex] = {
-            ...draft[messageIndex],
-            content: `${draft[messageIndex].content.replace('(Uploading)', '(Failed)')}`,
-            attachment: {
-              ...draft[messageIndex].attachment,
-              status: "error",
-            },
-          };
-        }
-      });
+      console.error("File upload error:", error);
+      return false;
     }
   };
 
   const handleSend = async (newMessage) => {
     if (!newMessage.trim() && !selectedFile) return;
 
-    let userMessageContent = newMessage;
-    let attachment = null;
-
+    // Handle file upload first if there's a file
     if (selectedFile) {
-      attachment = {
-        type: "pdf",
-        name: selectedFile.name,
-        status: "uploading",
-      };
-      userMessageContent = `${newMessage}\n[Attachment: ${selectedFile.name} (Uploading)]`;
-    }
-
-    const userMessage = {
-      id: nanoid(),
-      role: "user",
-      content: userMessageContent,
-      attachment,
-    };
-
-    setMessages(draft => [...draft, userMessage]);
-
-    // Handle file upload
-    if (selectedFile) {
-      await uploadFile(selectedFile, userMessage);
+      const uploadSuccess = await uploadFile(selectedFile);
       setSelectedFile(null);
+      
+      // If no text message and upload was handled, we're done
+      if (!newMessage.trim()) {
+        return;
+      }
     }
 
-    // Handle chat message
+    // Handle text message if there is one
     if (newMessage.trim()) {
+      // Add user message
+      const userMessage = {
+        id: nanoid(),
+        role: "user",
+        content: newMessage,
+      };
+
+      setMessages(draft => [...draft, userMessage]);
+
+      // Handle AI response
       const assistantMessageId = nanoid();
       const assistantMessage = {
         id: assistantMessageId,
@@ -344,4 +349,3 @@ const ChatWindow = ({ sessionId }) => {
 };
 
 export default ChatWindow;
-

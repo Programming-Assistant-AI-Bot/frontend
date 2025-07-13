@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useContext } from "react";
 import { PenLine, Trash, Search, Plus, LogOut } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import LoadingAnimation from "./LoadingAnimation";
-
+import { AuthContext } from "../contexts/AuthContext";
 
 const Sidebar = ({ onSessionSelect, onSessionCreated, onCreateSession, refreshSessions, setRefreshSessions }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -11,31 +11,50 @@ const Sidebar = ({ onSessionSelect, onSessionCreated, onCreateSession, refreshSe
   const [sessionData, setSessionData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSession, setActiveSession] = useState(null);
-  const userId = "tharundi_lavanya"; // Replace with actual user ID (e.g., from auth context)
+  
+  // Use authenticated user from context instead of hardcoded value
+  const { user, logout } = useContext(AuthContext);
+  const userId = user?.id || user?.username;
+
+  // Create an axios instance with auth headers
+  const axiosWithAuth = () => {
+    return axios.create({
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+  };
 
   const fetchSessions = async () => {
     if (!userId) {
       toast.error("User ID is missing. Please log in.");
       return;
     }
+    
+    setIsLoading(true);
     try {
-      const response = await axios.get(
+      const response = await axiosWithAuth().get(
         `http://localhost:8000/session/getAllSessions?user_id=${userId}`
       );
       setSessionData(response.data);
-      setIsLoading(false);
-      console.log(response.data)
       console.log("Fetched Sessions:", response.data);
     } catch (error) {
       const errorMessage = error.response?.data?.detail || "Failed to fetch sessions";
       toast.error(errorMessage);
       console.error("Failed to fetch sessions:", error);
+      
+      // If unauthorized, logout user
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        logout();
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [userId]); // Add userId as dependency so it refetches if user changes
 
   useEffect(() => {
     if (refreshSessions) {
@@ -50,7 +69,7 @@ const Sidebar = ({ onSessionSelect, onSessionCreated, onCreateSession, refreshSe
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8000/session/deleteSession/${id}`);
+      await axiosWithAuth().delete(`http://localhost:8000/session/deleteSession/${id}`);
       toast.success("Session deleted");
       if (activeSession === id) {
         setActiveSession(null);
@@ -71,7 +90,7 @@ const Sidebar = ({ onSessionSelect, onSessionCreated, onCreateSession, refreshSe
       return;
     }
     try {
-      await axios.put(
+      await axiosWithAuth().put(
         `http://localhost:8000/session/rename/${id}/${newName.trim()}`
       );
       toast.success("Session renamed");
@@ -86,14 +105,20 @@ const Sidebar = ({ onSessionSelect, onSessionCreated, onCreateSession, refreshSe
   const handleSessionSelect = (sessionId) => {
     setActiveSession(sessionId);
     onSessionSelect(sessionId);
-    
   };
 
+  // Add logout handler
+  const handleLogout = () => {
+    logout();
+  };
+
+  // Rest of your component code...
   const filteredSessions = sessionData.filter((session) =>
     session.sessionName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const categorizeSessions = useMemo(() => {
+    // Your existing categorization code...
     const now = new Date();
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
@@ -133,14 +158,17 @@ const Sidebar = ({ onSessionSelect, onSessionCreated, onCreateSession, refreshSe
       <div className="flex items-center justify-between mb-6 p-3 bg-slate-800/50 rounded-xl border border-slate-700/30">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center font-bold shadow-lg">
-            TL
+            {user?.username?.substring(0, 2).toUpperCase() || "U"}
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-100">Tharundi Lavanya</p>
-            <p className="text-xs text-slate-400">Premium Plan</p>
+            <p className="text-sm font-semibold text-slate-100">{user?.username || "User"}</p>
+            <p className="text-xs text-slate-400">{user?.email}</p>
           </div>
         </div>
-        <button className="p-2 hover:bg-slate-700/50 rounded-lg transition-all duration-200">
+        <button 
+          className="p-2 hover:bg-slate-700/50 rounded-lg transition-all duration-200"
+          onClick={handleLogout}
+        >
           <LogOut size={20} className="text-slate-400 hover:text-slate-200" />
         </button>
       </div>
@@ -210,19 +238,19 @@ const Sidebar = ({ onSessionSelect, onSessionCreated, onCreateSession, refreshSe
                           <div className={`w-2 h-2 rounded-full mr-3 shadow-sm ${activeSession === session.sessionId ? 'bg-blue-500' : 'bg-blue-400'}`} />
                           <span className="text-sm text-slate-200">{session.sessionName}</span>
                           <div className="ml-auto flex gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRename(session.id, session.sessionName);
-                              }}
-                              aria-label="Rename session"
-                              className="p-1 hover:bg-slate-700/50 rounded transition-colors"
-                            >
-                              <PenLine
-                                size={15}
-                                className="text-slate-400 hover:text-blue-400 transition-colors"
-                              />
-                            </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRename(session.sessionId, session.sessionName); // Changed from session.id to session.sessionId
+                            }}
+                            aria-label="Rename session"
+                            className="p-1 hover:bg-slate-700/50 rounded transition-colors"
+                          >
+                            <PenLine
+                              size={15}
+                              className="text-slate-400 hover:text-blue-400 transition-colors"
+                            />
+                          </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();

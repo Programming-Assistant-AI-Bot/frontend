@@ -1,17 +1,27 @@
-import React, { useState } from "react";
-import styles from '@/components/signup/SignUp.module.css'; // Reusing the signup styles
+import React, { useState, useContext } from "react";
+import styles from '@/components/signup/SignUp.module.css';
 import bgImage from '@/assets/images/bgImage.png';
 import logo from '@/assets/images/logo.png';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from "sonner";
+import { AuthContext } from '../../contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useContext(AuthContext);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Get the intended destination from location state, or default to /homepage
+  const from = location.state?.from || "/homepage";
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    
     try {
       const response = await fetch("http://localhost:8000/auth/login", {
         method: "POST",
@@ -24,18 +34,26 @@ const Login = () => {
         }),
       });
 
+      const data = await response.json();
+      
       if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("token", data.access_token); // Save JWT
-        alert("Login successful");
-        // Navigate to dashboard or homepage
-        navigate("/chatbot");
+        // Use the login function from AuthContext to set the token and user data
+        login(data.access_token, {
+          id: data.user_id,
+          username: data.username,
+          email: data.email
+        });
+        
+        toast.success("Login successful");
+        navigate(from); // Navigate to the intended destination
       } else {
-        alert("Login failed. Check credentials.");
+        toast.error(data.detail || "Login failed. Check credentials.");
       }
     } catch (err) {
       console.error("Login error:", err);
-      alert("An error occurred during login.");
+      toast.error("An error occurred during login.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -72,9 +90,13 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-
-            <button type="submit" className={styles.submitButton}>
-              Log in
+            
+            <button 
+              type="submit" 
+              className={styles.submitButton}
+              disabled={isLoading}
+            >
+              {isLoading ? "Logging in..." : "Log in"}
             </button>
           </form>
           <div className={styles.loginLink} onClick={() => navigate("/signup")}>Create a new account</div>
