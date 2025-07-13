@@ -1,29 +1,67 @@
-const BASE_URL = "http://localhost:8000";
+// src/api.js
+const API_BASE_URL = "http://localhost:8000";
 
-async function getChatHistory(sessionId) {
-  const res = await fetch(BASE_URL + `/chatHistory/${sessionId}`, {
-    method: 'GET',  // Changed from POST to GET to match backend endpoint
-    headers: { 'Content-Type': 'application/json' }
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    return Promise.reject({ status: res.status, data });
-  }
-  return data;
-}
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    "Content-Type": "application/json",
+    "Accept": "text/event-stream",
+    "Authorization": token ? `Bearer ${token}` : "",
+  };
+};
 
 async function sendChatMessage(sessionId, message) {
-  const res = await fetch(BASE_URL + `/chats/${sessionId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({message})
-  });
-  if (!res.ok) {
-    return Promise.reject({ status: res.status, data: await res.json() });
+  console.log(`Sending request to ${API_BASE_URL}/chat/${sessionId} with message: ${message}`);
+  try {
+    const response = await fetch(`${API_BASE_URL}/chat/${sessionId}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ message }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        // Handle auth errors - could redirect to login
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        throw new Error("Authentication failed");
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Error sending chat message:", error);
+    throw error;
   }
-  return res.body;
+}
+
+async function getChatHistory(sessionId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/chatHistory/${sessionId}`, {
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        // Handle auth errors
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        throw new Error("Authentication failed");
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching chat history:", error);
+    throw error;
+  }
 }
 
 export default {
-  getChatHistory, sendChatMessage
+  sendChatMessage,
+  getChatHistory,
+  getAuthHeaders // Export this for use in other files
 };

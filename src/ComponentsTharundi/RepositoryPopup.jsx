@@ -133,9 +133,9 @@
 
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosWithAuth from '@/utils/axiosWithAuth';
 
-const RepositoryPopup = ({ isOpen, onClose, onSubmit,sessionId }) => {
+const RepositoryPopup = ({ isOpen, onClose, onSubmit, sessionId }) => {
   const [repoUrl, setRepoUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -150,41 +150,21 @@ const RepositoryPopup = ({ isOpen, onClose, onSubmit,sessionId }) => {
     }
   }, [isOpen, onClose]);
 
-  // Reset form when popup opens
-  useEffect(() => {
-    if (isOpen) {
-      setRepoUrl('');
-      setErrorMessage('');
-      setIsSubmitting(false);
-    }
-  }, [isOpen]);
-
-  const validateGitHubUrl = (url) => {
-    const GITHUB_REPO_REGEX = /^https?:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?\/?$/;
-    return GITHUB_REPO_REGEX.test(url);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
-    // Client-side validation
     if (!repoUrl.trim()) {
-      setErrorMessage('Please enter a repository URL');
-      return;
-    }
-
-    if (!validateGitHubUrl(repoUrl)) {
-      setErrorMessage('Invalid GitHub URL format. Expected: https://github.com/owner/repo');
+      setErrorMessage('Please enter a GitHub repository URL');
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      const response = await axios.post(
-        'http://localhost:8000/validate/Contents/validateGithubUrl',
-        { link: repoUrl,session_id:sessionId}
+      // Use authenticated axios instance
+      const response = await axiosWithAuth().post(
+        '/validate/Contents/validateGithubUrl',
+        { link: repoUrl, session_id: sessionId }
       );
 
       if (response.data.valid) {
