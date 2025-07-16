@@ -15,7 +15,7 @@ import LoadingAnimation from "./LoadingAnimation";
 import axiosWithAuth, { axiosWithAuthFormData } from "@/utils/axiosWithAuth"; // Import the auth utilities
 import { AuthContext } from "../contexts/AuthContext"; // Import AuthContext
 
-const ChatWindow = ({ sessionId }) => {
+const ChatWindow = ({ sessionId, initialQuery = "", initialFile = null }) => {
   const [messages, setMessages] = useImmer([]);
   const [showAttachmentPopup, setShowAttachmentPopup] = useState(false);
   const [showRepositoryPopup, setShowRepositoryPopup] = useState(false);
@@ -29,7 +29,20 @@ const ChatWindow = ({ sessionId }) => {
   // Use ref to track the current streaming message
   const streamingMessageRef = useRef(null);
 
+  // Use ref to track if we've processed the initial file and query
+  const initialProcessedRef = useRef(false);
+
+  // Add a flag to track if initial fetch is complete
+  const initialFetchCompletedRef = useRef(false);
+
+
   useEffect(() => {
+
+    // Reset state when session changes
+    setMessages([]);
+    initialProcessedRef.current = false;
+    initialFetchCompletedRef.current = false;    
+  
     const fetchMessages = async () => {
       if (!sessionId) {
         setMessages([]);
@@ -54,11 +67,42 @@ const ChatWindow = ({ sessionId }) => {
         toast.error("Failed to load chat history");
       } finally {
         setIsLoading(false);
+        initialFetchCompletedRef.current = true; // Mark fetch as complete
       }
     };
 
     fetchMessages();
   }, [sessionId, setMessages]);
+
+  // Add new useEffect to process initial query once messages are loaded
+  useEffect(() => {
+    const processInitialContent = async () => {
+      // Wait until fetch is complete and not loading
+      if (initialProcessedRef.current || !initialFetchCompletedRef.current || isLoading) return;
+      
+      // Mark as processed immediately to prevent duplicate processing
+      initialProcessedRef.current = true;
+      
+      if (initialFile) {
+        const uploadedSuccess = await uploadFile(initialFile);
+        if (uploadedSuccess && initialQuery) {
+          await handleSend(initialQuery); // <-- await here!
+        }
+      }
+
+      else if (
+        initialQuery && 
+        !initialQuery.startsWith("[Attachment]") &&
+        !initialQuery.startsWith("[Repository Link]") &&
+        !initialQuery.startsWith("[Website URL]")
+      ) {
+        // Only send the query if there was no file
+        await handleSend(initialQuery);
+      }
+    };
+
+    processInitialContent();
+  }, [sessionId, initialFile, initialQuery,isLoading]);
 
   // Simplified uploadFile function
   const uploadFile = async (file) => {
@@ -215,6 +259,7 @@ const ChatWindow = ({ sessionId }) => {
 
     setInputText("");
   };
+
 
   const handleAttachType = (type) => {
     switch (type) {

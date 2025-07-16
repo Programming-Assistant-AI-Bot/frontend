@@ -5,12 +5,18 @@ import { toast } from "sonner";
 import LoadingAnimation from "./LoadingAnimation";
 import { AuthContext } from "../contexts/AuthContext";
 
-const Sidebar = ({ onSessionSelect, onSessionCreated, onCreateSession, refreshSessions, setRefreshSessions }) => {
+const Sidebar = ({ 
+  onSessionSelect, 
+  onCreateSession, 
+  refreshSessions, 
+  setRefreshSessions,
+  activeSession 
+}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [sessionId, setSessionId] = useState(null);
   const [sessionData, setSessionData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSession, setActiveSession] = useState(null);
+
   
   // Use authenticated user from context instead of hardcoded value
   const { user, logout } = useContext(AuthContext);
@@ -71,10 +77,14 @@ const Sidebar = ({ onSessionSelect, onSessionCreated, onCreateSession, refreshSe
     try {
       await axiosWithAuth().delete(`http://localhost:8000/session/deleteSession/${id}`);
       toast.success("Session deleted");
+      
+      // If we're deleting the active session, set active session to null
       if (activeSession === id) {
-        setActiveSession(null);
-        onSessionSelect(null); // Clear active session
+        // This will trigger the NewChatWindow to appear
+        onSessionSelect(null);
       }
+      
+      // Refresh the sessions list
       fetchSessions();
     } catch (error) {
       const errorMessage = error.response?.data?.detail || "Failed to delete session";
@@ -103,7 +113,6 @@ const Sidebar = ({ onSessionSelect, onSessionCreated, onCreateSession, refreshSe
   };
 
   const handleSessionSelect = (sessionId) => {
-    setActiveSession(sessionId);
     onSessionSelect(sessionId);
   };
 

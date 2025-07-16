@@ -125,13 +125,16 @@
 
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axiosWithAuth from '@/utils/axiosWithAuth';
+import { AuthContext } from "../contexts/AuthContext";
+import { toast } from 'sonner';
 
 const WeburlPopup = ({ isOpen, onClose, onSubmit, sessionId }) => {
   const [url, setUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     if (isOpen) {
@@ -143,6 +146,19 @@ const WeburlPopup = ({ isOpen, onClose, onSubmit, sessionId }) => {
     }
   }, [isOpen, onClose]);
 
+  const createNewSession = async (urlContent) => {
+    try {
+      const response = await axiosWithAuth().post("http://localhost:8000/session/createSession", {
+        query: `[Website URL] ${urlContent}`,
+      });
+      
+      return response.data.sessionId;
+    } catch (error) {
+      console.error("Error creating session:", error);
+      throw new Error("Failed to create session for URL validation");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
@@ -152,19 +168,63 @@ const WeburlPopup = ({ isOpen, onClose, onSubmit, sessionId }) => {
       return;
     }
 
+    // Basic format validation for URL
+    let formattedUrl = url.trim();
+    try {
+      // Try to construct a URL object to validate format
+      new URL(formattedUrl);
+    } catch (error) {
+      // If not a valid URL, try adding https:// prefix
+      try {
+        formattedUrl = 'https://' + formattedUrl;
+        new URL(formattedUrl); // Validate again
+      } catch {
+        setErrorMessage('Please enter a valid website URL');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
-      // Use authenticated axios instance
+      let validationSessionId = sessionId;
+      let newSessionCreated = false;
+
+      // If no sessionId provided, create a new session first
+      if (!validationSessionId) {
+        try {
+          validationSessionId = await createNewSession(formattedUrl);
+          newSessionCreated = true;
+          console.log("Created new session for validation:", validationSessionId);
+        } catch (error) {
+          setErrorMessage("Could not create session: " + error.message);
+          return;
+        }
+      }
+
+      // Now validate the URL with a session ID
       const response = await axiosWithAuth().post(
         '/validate/Contents/validateWebUrl',
-        { link: url, session_id: sessionId }
+        { link: formattedUrl, session_id: validationSessionId }
       );
 
       if (response.data.valid) {
-        await onSubmit(url);
-        onClose(); // Close popup on success
+        // If we created a new session, pass both URL and sessionId back
+        if (newSessionCreated) {
+          await onSubmit(formattedUrl, validationSessionId);
+        } else {
+          await onSubmit(formattedUrl);
+        }
+        onClose();
       } else {
         setErrorMessage(response.data.reason || 'URL validation failed');
+        // If we created a new session but validation failed, we should clean it up
+        if (newSessionCreated) {
+          try {
+            await axiosWithAuth().delete(`http://localhost:8000/session/deleteSession/${validationSessionId}`);
+          } catch (cleanupError) {
+            console.error("Failed to clean up temporary session:", cleanupError);
+          }
+        }
       }
     } catch (error) {
       console.error('URL validation error:', error);
@@ -181,6 +241,7 @@ const WeburlPopup = ({ isOpen, onClose, onSubmit, sessionId }) => {
     }
   };
 
+  // Rest of component remains the same...
   if (!isOpen) return null;
 
   return (
