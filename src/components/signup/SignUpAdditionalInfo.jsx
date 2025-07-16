@@ -50,7 +50,9 @@ function SignUpAdditionalInfo() {
         return res.json()
       })
       .then(() => {
+
         toast.success("Signup successful");
+
         navigate('/login')
       })
       .catch((err) => {
