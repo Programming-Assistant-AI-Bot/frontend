@@ -42,6 +42,8 @@ const ChatWindow = ({ sessionId, initialQuery = "", initialFile = null }) => {
     setMessages([]);
     initialProcessedRef.current = false;
     initialFetchCompletedRef.current = false;    
+    setIsLoading(false); // Reset loading state
+    setIsStreaming(false); // Reset streaming state
   
     const fetchMessages = async () => {
       if (!sessionId) {
@@ -72,37 +74,53 @@ const ChatWindow = ({ sessionId, initialQuery = "", initialFile = null }) => {
     };
 
     fetchMessages();
-  }, [sessionId, setMessages]);
+  }, [sessionId]);
 
   // Add new useEffect to process initial query once messages are loaded
   useEffect(() => {
     const processInitialContent = async () => {
-      // Wait until fetch is complete and not loading
+      console.log("processInitialContent called", { 
+        initialFile, 
+        initialQuery, 
+        initialProcessed: initialProcessedRef.current,
+        fetchCompleted: initialFetchCompletedRef.current,
+        isLoading,
+        messagesLength: messages.length 
+      });
+
       if (initialProcessedRef.current || !initialFetchCompletedRef.current || isLoading) return;
       
-      // Mark as processed immediately to prevent duplicate processing
-      initialProcessedRef.current = true;
-      
-      if (initialFile) {
-        const uploadedSuccess = await uploadFile(initialFile);
-        if (uploadedSuccess && initialQuery) {
-          await handleSend(initialQuery); // <-- await here!
-        }
+      // If we already have messages, don't process initial content
+      if (messages.length > 0) {
+        console.log("Messages already exist, skipping initial processing");
+        initialProcessedRef.current = true;
+        return;
       }
 
-      else if (
-        initialQuery && 
+      initialProcessedRef.current = true;
+      
+      // Only process if we have a completely new session with no messages
+      if (initialFile && initialQuery) {
+        console.log("Processing file + query");
+        const uploadedSuccess = await uploadFile(initialFile);
+        if (uploadedSuccess) {
+          await handleSend(initialQuery);
+        }
+      } else if (initialFile) {
+        console.log("Processing file only");
+        await uploadFile(initialFile);
+      } else if (initialQuery && 
         !initialQuery.startsWith("[Attachment]") &&
         !initialQuery.startsWith("[Repository Link]") &&
         !initialQuery.startsWith("[Website URL]")
       ) {
-        // Only send the query if there was no file
+        console.log("Processing query only");
         await handleSend(initialQuery);
       }
     };
 
     processInitialContent();
-  }, [sessionId, initialFile, initialQuery,isLoading]);
+  }, [sessionId, initialFile, initialQuery, messages]);
 
   // Simplified uploadFile function
   const uploadFile = async (file) => {
