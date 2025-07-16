@@ -132,13 +132,16 @@
 
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axiosWithAuth from '@/utils/axiosWithAuth';
+import { AuthContext } from "../contexts/AuthContext";
+import { toast } from 'sonner';
 
 const RepositoryPopup = ({ isOpen, onClose, onSubmit, sessionId }) => {
   const [repoUrl, setRepoUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     if (isOpen) {
@@ -150,28 +153,88 @@ const RepositoryPopup = ({ isOpen, onClose, onSubmit, sessionId }) => {
     }
   }, [isOpen, onClose]);
 
+  const createNewSession = async (repoContent) => {
+    try {
+      const response = await axiosWithAuth().post("http://localhost:8000/session/createSession", {
+        query: `[Repository Link] ${repoContent}`,
+      });
+      
+      return response.data.sessionId;
+    } catch (error) {
+      console.error("Error creating session:", error);
+      throw new Error("Failed to create session for repository validation");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
     if (!repoUrl.trim()) {
-      setErrorMessage('Please enter a GitHub repository URL');
+      setErrorMessage('Please enter a repository URL');
       return;
+    }
+
+    // Basic format validation for repo URL
+    let formattedRepoUrl = repoUrl.trim();
+    // GitHub/GitLab URL validation
+    const repoRegex = /^(https?:\/\/)?(www\.)?(github|gitlab)\.com\/.+\/.+/;
+    if (!repoRegex.test(formattedRepoUrl)) {
+      // Try adding https:// if missing
+      if (!/^https?:\/\//.test(formattedRepoUrl)) {
+        formattedRepoUrl = 'https://' + formattedRepoUrl;
+        if (!repoRegex.test(formattedRepoUrl)) {
+          setErrorMessage('Please enter a valid GitHub or GitLab repository URL');
+          return;
+        }
+      } else {
+        setErrorMessage('Please enter a valid GitHub or GitLab repository URL');
+        return;
+      }
     }
 
     setIsSubmitting(true);
     try {
-      // Use authenticated axios instance
+      let validationSessionId = sessionId;
+      let newSessionCreated = false;
+
+      // If no sessionId provided, create a new session first
+      if (!validationSessionId) {
+        try {
+          validationSessionId = await createNewSession(formattedRepoUrl);
+          newSessionCreated = true;
+          console.log("Created new session for repo validation:", validationSessionId);
+        } catch (error) {
+          setErrorMessage("Could not create session: " + error.message);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Now validate the repository URL with a session ID
       const response = await axiosWithAuth().post(
         '/validate/Contents/validateGithubUrl',
-        { link: repoUrl, session_id: sessionId }
+        { link: formattedRepoUrl, session_id: validationSessionId }
       );
 
       if (response.data.valid) {
-        await onSubmit(repoUrl);
-        onClose(); // Close popup on success
+        // If we created a new session, pass both URL and sessionId back
+        if (newSessionCreated) {
+          await onSubmit(formattedRepoUrl, validationSessionId);
+        } else {
+          await onSubmit(formattedRepoUrl);
+        }
+        onClose();
       } else {
         setErrorMessage(response.data.reason || 'Repository validation failed');
+        // Clean up temp session if validation failed
+        if (newSessionCreated) {
+          try {
+            await axiosWithAuth().delete(`http://localhost:8000/session/deleteSession/${validationSessionId}`);
+          } catch (cleanupError) {
+            console.error("Failed to clean up temporary session:", cleanupError);
+          }
+        }
       }
     } catch (error) {
       console.error('Repository validation error:', error);

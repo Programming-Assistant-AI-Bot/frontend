@@ -15,7 +15,7 @@ import LoadingAnimation from "./LoadingAnimation";
 import axiosWithAuth, { axiosWithAuthFormData } from "@/utils/axiosWithAuth"; // Import the auth utilities
 import { AuthContext } from "../contexts/AuthContext"; // Import AuthContext
 
-const ChatWindow = ({ sessionId }) => {
+const ChatWindow = ({ sessionId, initialQuery = "", initialFile = null }) => {
   const [messages, setMessages] = useImmer([]);
   const [showAttachmentPopup, setShowAttachmentPopup] = useState(false);
   const [showRepositoryPopup, setShowRepositoryPopup] = useState(false);
@@ -29,7 +29,22 @@ const ChatWindow = ({ sessionId }) => {
   // Use ref to track the current streaming message
   const streamingMessageRef = useRef(null);
 
+  // Use ref to track if we've processed the initial file and query
+  const initialProcessedRef = useRef(false);
+
+  // Add a flag to track if initial fetch is complete
+  const initialFetchCompletedRef = useRef(false);
+
+
   useEffect(() => {
+
+    // Reset state when session changes
+    setMessages([]);
+    initialProcessedRef.current = false;
+    initialFetchCompletedRef.current = false;    
+    setIsLoading(false); // Reset loading state
+    setIsStreaming(false); // Reset streaming state
+  
     const fetchMessages = async () => {
       if (!sessionId) {
         setMessages([]);
@@ -54,11 +69,58 @@ const ChatWindow = ({ sessionId }) => {
         toast.error("Failed to load chat history");
       } finally {
         setIsLoading(false);
+        initialFetchCompletedRef.current = true; // Mark fetch as complete
       }
     };
 
     fetchMessages();
-  }, [sessionId, setMessages]);
+  }, [sessionId]);
+
+  // Add new useEffect to process initial query once messages are loaded
+  useEffect(() => {
+    const processInitialContent = async () => {
+      console.log("processInitialContent called", { 
+        initialFile, 
+        initialQuery, 
+        initialProcessed: initialProcessedRef.current,
+        fetchCompleted: initialFetchCompletedRef.current,
+        isLoading,
+        messagesLength: messages.length 
+      });
+
+      if (initialProcessedRef.current || !initialFetchCompletedRef.current || isLoading) return;
+      
+      // If we already have messages, don't process initial content
+      if (messages.length > 0) {
+        console.log("Messages already exist, skipping initial processing");
+        initialProcessedRef.current = true;
+        return;
+      }
+
+      initialProcessedRef.current = true;
+      
+      // Only process if we have a completely new session with no messages
+      if (initialFile && initialQuery) {
+        console.log("Processing file + query");
+        const uploadedSuccess = await uploadFile(initialFile);
+        if (uploadedSuccess) {
+          await handleSend(initialQuery);
+        }
+      } else if (initialFile) {
+        console.log("Processing file only");
+        await uploadFile(initialFile);
+      } else if (initialQuery && 
+        !initialQuery.startsWith("[Attachment]") &&
+        !initialQuery.startsWith("[Repository Link]") &&
+        !initialQuery.startsWith("[Website URL]")
+      ) {
+        console.log("Processing query only");
+        await handleSend(initialQuery);
+      }
+    };
+
+    processInitialContent();
+  }, [sessionId, initialFile, initialQuery, messages]);
 
   // Simplified uploadFile function
   const uploadFile = async (file) => {
@@ -215,6 +277,7 @@ const ChatWindow = ({ sessionId }) => {
 
     setInputText("");
   };
+
 
   const handleAttachType = (type) => {
     switch (type) {
